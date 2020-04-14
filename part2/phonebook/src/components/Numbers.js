@@ -9,7 +9,7 @@ const Numbers = ({ persons, newFilterName }) => {
 
     return (
         <div>
-            {filteredList.map((person, i) => <div key={i}>{person.name} {person.phoneNumber}</div>)}
+            {filteredList.map((person, i) => <div key={i}>{person.name} {person.number}</div>)}
         </div>
     )
 }

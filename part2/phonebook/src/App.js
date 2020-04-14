@@ -1,19 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import NewPersonForm from './components/NewPersonForm'
 import Numbers from './components/Numbers'
+import axios from 'axios'
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', phoneNumber: '040-123456' },
-    { name: 'Ada Lovelace', phoneNumber: '39-44-5323523' },
-    { name: 'Dan Abramov', phoneNumber: '12-43-234345' },
-    { name: 'Mary Poppendieck', phoneNumber: '39-23-6423122' }
-  ])
+  const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newFilterName, setNewFilterName] = useState('')
   const [newPhoneNumber, setNewPhoneNumber] = useState('')
 
+  useEffect(() => {
+    axios
+      .get('http://localhost:3001/persons')
+      .then(response => {
+        setPersons(response.data)
+      })
+  }, [])
+ 
   const handleFilterNameChange = (event) => {
     setNewFilterName(event.target.value)
   }
@@ -30,7 +34,7 @@ const App = () => {
     event.preventDefault()
     const newPerson = {
       name: newName,
-      phoneNumber: newPhoneNumber
+      number: newPhoneNumber
     }
     if (persons.filter(person => person.name === newPerson.name).length === 0) {
       setPersons(persons.concat(newPerson))
