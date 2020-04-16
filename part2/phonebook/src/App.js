@@ -4,12 +4,16 @@ import NewPersonForm from './components/NewPersonForm'
 import Numbers from './components/Numbers'
 import axios from 'axios'
 import contacts from './services/Contacts'
+import './index.css'
+import Notification from './components/Notification'
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newFilterName, setNewFilterName] = useState('')
   const [newPhoneNumber, setNewPhoneNumber] = useState('')
+  const [notificationMessage, setNotificationMessage] = useState(null)
+  const [notificationType, setNotificationType] = useState('success')
 
   useEffect(() => {
     axios
@@ -18,7 +22,7 @@ const App = () => {
         setPersons(response.data)
       })
   }, [])
- 
+
   const handleFilterNameChange = (event) => {
     setNewFilterName(event.target.value)
   }
@@ -32,11 +36,31 @@ const App = () => {
   }
 
   const handleRemoveContact = (person) => {
-    if(window.confirm(`Delete ${person.name}?`)) {
-        contacts.removeContact(person.id)
-        setPersons(persons.filter(p => p.id !== person.id))
+    if (window.confirm(`Delete ${person.name}?`)) {
+      contacts
+        .removeContact(person.id)
+        .then(returnedContact => {
+          setPersons(persons.filter(p => p.id !== person.id))
+          setNotificationType('success')
+          setNotificationMessage(
+            `Deleted ${person.name}`
+          )
+          setTimeout(() => {
+            setNotificationMessage(null)
+          }, 5000)
+        })
+        .catch(error => {
+          setNotificationType('error')
+          setNotificationMessage(
+            `${person.name} was already removed from server`
+          )
+          setTimeout(() => {
+            setNotificationMessage(null)
+          }, 5000)
+          setPersons(persons.filter(p => p.name !== person.name))
+        })
     }
-}
+  }
 
   const addPerson = (event) => {
     event.preventDefault()
@@ -48,20 +72,51 @@ const App = () => {
 
     // New person's name not in phonebook
     if (persons.filter(person => person.name === newPerson.name).length === 0) {
-      contacts.createContact(newPerson).then(returnedContact => {
-        setPersons(persons.concat(returnedContact))
-      })
-    } 
+      contacts
+        .createContact(newPerson)
+        .then(returnedContact => {
+          setPersons(persons.concat(returnedContact))
+          setNotificationType('success')
+          setNotificationMessage(
+            `Added ${returnedContact.name}`
+          )
+          setTimeout(() => {
+            setNotificationMessage(null)
+          }, 5000)
+        })
+    }
     // New Person already exists
     else {
       const message = `${newPerson.name} is already added to phonebook, replace the old number with a new one?`
-      if(window.confirm(message)) {
-        const id = persons.filter(person => person.name === newPerson.name).id
-        contacts.updateContact(id, newPerson)
-        setPersons(persons.map(p => p.name === newPerson.name ? newPerson : p))
+      if (window.confirm(message)) {
+        const id = persons.find(person => person.name === newPerson.name).id
+        contacts
+          .updateContact(id, newPerson)
+          .then(returnedContact => {
+            setPersons(persons.map(p =>
+              p.name === returnedContact.name ? returnedContact : p
+            ))
+            setNotificationType('success')
+            setNotificationMessage(
+              `Changed number for ${newPerson.name}`
+            )
+            setTimeout(() => {
+              setNotificationMessage(null)
+            }, 5000)
+          })
+          .catch(error => {
+            setNotificationType('error')
+            setNotificationMessage(
+              `${newPerson.name} was already removed from server`
+            )
+            setTimeout(() => {
+              setNotificationMessage(null)
+            }, 5000)
+            setPersons(persons.filter(p => p.name !== newPerson.name))
+          })
       }
     }
-    
+
     setNewName('')
     setNewPhoneNumber('')
   }
@@ -69,6 +124,10 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification
+        message={notificationMessage}
+        type={notificationType}
+      />
       <Filter
         newFilterName={newFilterName}
         handleFilterNameChange={handleFilterNameChange}
@@ -82,9 +141,9 @@ const App = () => {
         handlePhoneNumberChange={handlePhoneNumberChange}
       />
       <h2>Numbers</h2>
-      <Numbers 
-        persons={persons} 
-        newFilterName={newFilterName} 
+      <Numbers
+        persons={persons}
+        newFilterName={newFilterName}
         handleRemoveContact={handleRemoveContact}
       />
     </div>
