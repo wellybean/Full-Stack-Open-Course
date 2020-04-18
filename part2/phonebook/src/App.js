@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import NewPersonForm from './components/NewPersonForm'
 import Numbers from './components/Numbers'
-import axios from 'axios'
 import contacts from './services/Contacts'
 import './index.css'
 import Notification from './components/Notification'
@@ -16,10 +15,10 @@ const App = () => {
   const [notificationType, setNotificationType] = useState('success')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
+    contacts
+      .getAll()
       .then(response => {
-        setPersons(response.data)
+        setPersons(response)
       })
   }, [])
 
@@ -39,7 +38,7 @@ const App = () => {
     if (window.confirm(`Delete ${person.name}?`)) {
       contacts
         .removeContact(person.id)
-        .then(returnedContact => {
+        .then(() => {
           setPersons(persons.filter(p => p.id !== person.id))
           setNotificationType('success')
           setNotificationMessage(
