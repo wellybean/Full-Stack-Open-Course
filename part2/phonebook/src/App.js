@@ -83,8 +83,17 @@ const App = () => {
             setNotificationMessage(null)
           }, 5000)
         })
+        .catch(error => {
+          setNotificationType('error')
+          setNotificationMessage(
+            `${error.response.data.error}`
+          )
+          setTimeout(() => {
+            setNotificationMessage(null)
+          }, 5000)
+        })
     }
-    // New Person already exists
+    // New person already exists
     else {
       const message = `${newPerson.name} is already added to phonebook, replace the old number with a new one?`
       if (window.confirm(message)) {
@@ -105,13 +114,23 @@ const App = () => {
           })
           .catch(error => {
             setNotificationType('error')
-            setNotificationMessage(
-              `${newPerson.name} was already removed from server`
-            )
-            setTimeout(() => {
-              setNotificationMessage(null)
-            }, 5000)
-            setPersons(persons.filter(p => p.name !== newPerson.name))
+            console.log(error.response)
+            if(error.response.status === 404) {
+              setNotificationMessage(
+                `${newPerson.name} was already removed from server`
+              )
+              setTimeout(() => {
+                setNotificationMessage(null)
+              }, 5000)
+              setPersons(persons.filter(p => p.name !== newPerson.name))
+            } else {
+              setNotificationMessage(
+                `${error.response.data.error}`
+              )
+              setTimeout(() => {
+                setNotificationMessage(null)
+              }, 5000)
+            }
           })
       }
     }
